@@ -19,57 +19,53 @@
 - **状态指示**：进行中显示旋转圆环，需要用户交互时显示橙色问号圆环，有未读完成时显示小蓝点（会话获焦后自动消失）。
 - **外观**：字号三级独立调节（区块标题 / 项目文件夹 / 会话，8–22px 连续可调）、面板背景三态（毛玻璃 / 与侧栏融合 / 增强对比）、状态标识左右可切换、中文 / English。
 
-## 安装
+## 安装/卸载（无需重启DSH）
 
-在 DSH 中把本包作为 bundle 安装：
+为 DSH Web 端 ：
 
 ```
-plugin_manager  action: install_bundle
-                target: <本包解压后的绝对路径>   或   dsh-sidebar-recent（已发布到 registry 时）
+dsh plugin --profile web add dsh-sidebar-recent #安装
+```
+```
+dsh plugin --profile web remove dsh-sidebar-recent #卸载
 ```
 
 安装后 DSH 会通过 HMR 激活，无需重启。
 
-也可以直接指向 `.tgz`：
+为 DSH 桌面端：
 
 ```
-plugin_manager  action: install_bundle
-                target: C:\path\to\dsh-sidebar-recent-1.0.0.tgz
+dsh plugin --profile desktop add dsh-sidebar-recent #安装
+```
+```
+dsh plugin --profile web remove dsh-sidebar-recent #卸载
 ```
 
-## 卸载 / 恢复原生
+## 恢复原生
 
-```
-plugin_manager  action: set_plugin
-                target: dsh-sidebar-recent
-                enabled: false
-```
-
-停用后 DSH 原生工作区浏览器立即回到原位（插件以 `priority: -100` 抢占槽位，官方注册始终存活）。
+直接停用或卸载本插件后后 DSH 原生工作区浏览器立即回到原位（插件以 `priority: -100` 抢占槽位，官方注册始终存活）。
 
 ## 配置
 
-所有设置存于浏览器 `localStorage`：
-
-| 键 | 说明 |
-| --- | --- |
-| `dsh.sidebar-recent.view.v8` | 当前视图配置（JSON） |
-| `dsh.sidebar-recent.view.v8.backup` | 上一次写入前的自动备份 |
-
-视图配置项：`groupBy`、`orderBy`、`archivedFilter`、`expanded`、`wsCollapsed`、`recentCollapsed`、`fontSection`、`fontGroup`、`fontRow`、`panelStyle`、`indicatorSide`、`wsRatio`。
-
 外观参数在侧栏右上角的「视图选项」菜单里调整，改动即时保存。
+
+<details> <summary>开发者工具</summary>
+所有设置存于浏览器 localStorage 中：
+
+键	说明
+dsh.sidebar-recent.view.v8	当前视图配置
+dsh.sidebar-recent.view.v8.backup	自动备份
+如果插件界面出现异常，可在浏览器开发者工具中清除上述键值以恢复默认。
+
+</details>
 
 ## 兼容性
 
 - DSH Desktop / Web（`dsh.client.platform: web`）。
 - 依赖槽位：`sidebar.workspaces`（`single`），并以 `children` 声明 `sidebar.workspaces.directoryFlow`、`sidebar.workspaces.session.menu.item`、`sidebar.workspaces.session.row.action`、`sidebar.session.row.leading`、`sidebar.session.row.hover`，与官方 ui-workspace 的槽位契约保持一致。
-- 使用主题 token（`--dsw-alias-*`）着色，浅色 / 深色主题均可读；菜单底色按用户指定固定为 `#FCFDFD`。
+- 使用主题 token（`--dsw-alias-*`）着色，浅色 / 深色主题均可读
 
 ## 隐私
 
-纯前端插件：不联网、不上报、不读写项目文件。会话数据全部来自 DSH 客户端已有的服务与快照。
+纯前端插件：不联网、不上报、不修改。
 
-## 许可
-
-MIT
