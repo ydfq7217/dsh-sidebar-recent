@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Sidebar Recent",
+    "description": "Replaces the sidebar workspace browser with a Projects + Recent pair: browse sessions by project and chronologically at the same time."
+  }
+}
