@@ -3,6 +3,7 @@
 [![npm](https://img.shields.io/npm/v/dsh-sidebar-recent.svg)](https://www.npmjs.com/package/dsh-sidebar-recent)
 [![GitHub release](https://img.shields.io/github/v/release/ydfq7217/dsh-sidebar-recent.svg)](https://github.com/ydfq7217/dsh-sidebar-recent/releases)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ydfq7217/dsh-sidebar-recent/blob/main/LICENSE)
+[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
 
 为 **DeepSeek Harness (DSH)** 侧栏提供「项目 + 最近」双栏会话浏览器：既能按项目分组翻会话，也能按最近使用时间从上到下（新 → 旧）一眼扫到全部会话。
 
@@ -30,8 +31,6 @@ dsh plugin --profile web add dsh-sidebar-recent #安装
 dsh plugin --profile web remove dsh-sidebar-recent #卸载
 ```
 
-安装后 DSH 会通过 HMR 激活，无需重启。
-
 为 DSH 桌面端：
 
 ```
@@ -43,7 +42,7 @@ dsh plugin --profile desktop remove dsh-sidebar-recent #卸载
 
 ## 恢复原生
 
-直接停用或卸载本插件后后 DSH 原生工作区浏览器立即回到原位（插件以 `priority: -100` 抢占槽位，官方注册始终存活）。
+直接停用或卸载本插件后 DSH 原生工作区浏览器立即回到原位（插件以 `priority: -100` 抢占槽位，官方注册始终存活）。
 
 ## 配置
 
