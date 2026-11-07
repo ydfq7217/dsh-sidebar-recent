@@ -50,7 +50,7 @@ dsh plugin --profile desktop remove dsh-sidebar-recent #卸载
 
 ## 兼容性
 
-- DSH Desktop / Web（`dsh.client.platform: web`）。
+- DSH Desktop / Web （ >=0.2.x <0.3.0 可用 ）
 - 依赖槽位：`sidebar.workspaces`（`single`），并以 `children` 声明 `sidebar.workspaces.directoryFlow`、`sidebar.workspaces.session.menu.item`、`sidebar.workspaces.session.row.action`、`sidebar.session.row.leading`、`sidebar.session.row.hover`，与官方 ui-workspace 的槽位契约保持一致。
 - 使用主题 token（`--dsw-alias-*`）着色，浅色 / 深色主题均可读
 
