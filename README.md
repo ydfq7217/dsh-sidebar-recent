@@ -38,7 +38,7 @@ dsh plugin --profile web remove dsh-sidebar-recent #卸载
 dsh plugin --profile desktop add dsh-sidebar-recent #安装
 ```
 ```
-dsh plugin --profile web remove dsh-sidebar-recent #卸载
+dsh plugin --profile desktop remove dsh-sidebar-recent #卸载
 ```
 
 ## 恢复原生
@@ -48,16 +48,6 @@ dsh plugin --profile web remove dsh-sidebar-recent #卸载
 ## 配置
 
 外观参数在侧栏右上角的「视图选项」菜单里调整，改动即时保存。
-
-<details> <summary>开发者工具</summary>
-所有设置存于浏览器 localStorage 中：
-
-键	说明
-dsh.sidebar-recent.view.v8	当前视图配置
-dsh.sidebar-recent.view.v8.backup	自动备份
-如果插件界面出现异常，可在浏览器开发者工具中清除上述键值以恢复默认。
-
-</details>
 
 ## 兼容性
 
