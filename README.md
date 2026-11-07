@@ -1,5 +1,9 @@
 # Sidebar Recent · 侧栏最近会话
 
+[![npm](https://img.shields.io/npm/v/dsh-sidebar-recent.svg)](https://www.npmjs.com/package/dsh-sidebar-recent)
+[![GitHub release](https://img.shields.io/github/v/release/ydfq7217/dsh-sidebar-recent.svg)](https://github.com/ydfq7217/dsh-sidebar-recent/releases)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ydfq7217/dsh-sidebar-recent/blob/main/LICENSE)
+
 为 **DeepSeek Harness (DSH)** 侧栏提供「项目 + 最近」双栏会话浏览器：既能按项目分组翻会话，也能按最近使用时间从上到下（新 → 旧）一眼扫到全部会话。
 
 > 这是一个 DSH Client 插件，通过 `sidebar.workspaces` 槽位接管侧栏会话浏览区。停用插件即恢复 DSH 原生浏览器，不修改安装目录、不改动任何官方文件。
