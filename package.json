@@ -1,6 +1,6 @@
 {
   "name": "dsh-sidebar-recent",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": false,
   "type": "module",
   "description": "Sidebar Recent: a project-grouped session browser with a chronological Recent list for DeepSeek Harness.",
