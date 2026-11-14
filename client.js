@@ -167,6 +167,7 @@ window.__ModuleLoader__.load({
 			'panelStyle.contrast': '增强对比',
 			'recentAlign.label': '最近栏对齐',
 			'showTime.label': '显示时间',
+			'split.label': '高度拖动条',
 			'recentAlign.global': '全局',
 			'recentAlign.independent': '独立',
 			'split.hint': '拖动调整上下两栏高度，双击恢复默认',
@@ -282,6 +283,7 @@ window.__ModuleLoader__.load({
 			'panelStyle.contrast': 'Higher contrast',
 			'recentAlign.label': 'Recent pane alignment',
 			'showTime.label': 'Show time',
+			'split.label': 'Pane splitter',
 			'recentAlign.global': 'Global',
 			'recentAlign.independent': 'Independent',
 			'split.hint': 'Drag to resize the two lists; double-click to reset',
@@ -461,7 +463,9 @@ window.__ModuleLoader__.load({
 			indicatorSide: 'left',
 			recentAlign: 'global',
 			showTime: false,
+			split: true,
 				wsRatio: null,
+		wsPx: null,
 				recentRatio: null
 			};
 		}
@@ -533,7 +537,9 @@ function clampFont(value) {
 			if (parsed.indicatorSide === 'left' || parsed.indicatorSide === 'right') out.indicatorSide = parsed.indicatorSide;
 				if (parsed.recentAlign === 'global' || parsed.recentAlign === 'independent') out.recentAlign = parsed.recentAlign;
 			if (typeof parsed.showTime === 'boolean') out.showTime = parsed.showTime;
+			if (typeof parsed.split === 'boolean') out.split = parsed.split;
 				if (typeof parsed.wsRatio === 'number' && parsed.wsRatio >= 0.12 && parsed.wsRatio <= 0.9) out.wsRatio = parsed.wsRatio;
+			if (typeof parsed.wsPx === 'number' && parsed.wsPx >= 40 && parsed.wsPx <= 4000) out.wsPx = parsed.wsPx;
 				return out;
 			} catch (err) {
 				return null;
@@ -1263,10 +1269,8 @@ function StatusDot(props) {
 			const [appearanceOpen, setAppearanceOpen] = useState(false);
 			const [wsContentH, setWsContentH] = useState(0);
 			const wsInnerRef = useRef(null);
-			const bodyRef = useRef(null);
 			const animTimer = useRef(0);
 			const [animating, setAnimating] = useState(false);
-			const [bodyH, setBodyH] = useState(0);
 			const [groupDrag, setGroupDrag] = useState(null);
 			const groupHold = useRef(0);
 			const groupDragMeta = useRef(null);
@@ -1309,35 +1313,6 @@ function StatusDot(props) {
 				};
 			}, []);
 
-			useLayoutEffect(function () {
-				const el = bodyRef.current;
-				if (!el) return undefined;
-				let frame = 0;
-				function measure() {
-					frame = 0;
-					const root = el.parentElement;
-					if (!root) return;
-					const headEl = el.previousElementSibling;
-					const headH = headEl ? headEl.offsetHeight : 0;
-					const raw = root.clientHeight - headH - 6;
-					const next = raw > 0 ? Math.round(raw * 100) / 100 : 0;
-					setBodyH(function (prev) { return Math.abs(prev - next) < 0.5 ? prev : next; });
-				}
-				function schedule() {
-					if (frame) return;
-					frame = window.requestAnimationFrame(measure);
-				}
-				measure();
-				if (typeof ResizeObserver === 'function') {
-					const ro = new ResizeObserver(schedule);
-					ro.observe(el.parentElement || el);
-					return function () {
-						if (frame) window.cancelAnimationFrame(frame);
-						ro.disconnect();
-					};
-				}
-				return function () { if (frame) window.cancelAnimationFrame(frame); };
-			}, []);
 			function startAnim() {
 				setAnimating(true);
 				if (animTimer.current) window.clearTimeout(animTimer.current);
@@ -1906,6 +1881,11 @@ function StatusDot(props) {
 						icon: h(Icon, { name: 'clock', size: 14 })
 					},
 					{
+						id: 'toggle-split',
+						label: tr('split.label'),
+						icon: h(Icon, { name: 'sortManual', size: 14 })
+					},
+					{
 						id: 'toggle-appearance',
 						label: tr('appearance.label') + (appearanceOpen ? '  \u25BE' : '  \u25B8'),
 						icon: h(Icon, { name: 'sliders', size: 14 })
@@ -1965,13 +1945,19 @@ function StatusDot(props) {
 					{ default: 'hide-archived', show: 'show-archived', only: 'only-archived' }[view.archivedFilter],
 					'panel-' + view.panelStyle,
 					'recent-align-' + view.recentAlign,
-					view.showTime ? 'toggle-time' : ''
+					view.showTime ? 'toggle-time' : '',
+					view.split ? 'toggle-split' : ''
 				];
-			}, [view.groupBy, view.orderBy, view.archivedFilter, view.panelStyle, view.recentAlign, view.showTime]);
+			}, [view.groupBy, view.orderBy, view.archivedFilter, view.panelStyle, view.recentAlign, view.showTime, view.split]);
 
 			function onViewMenuPick(id) {
 				if (id === 'toggle-time') {
 					patchView({ showTime: !view.showTime });
+					setMenu(null);
+					return;
+				}
+				if (id === 'toggle-split') {
+					patchView({ split: !view.split });
 					setMenu(null);
 					return;
 				}
@@ -2446,39 +2432,24 @@ function StatusDot(props) {
 			}
 
 			const WS_HEAD_H = 34;
-			const BODY_PAD = 2;
-			const BODY_GAP = 1;
-			const HANDLE_H = 4;
 			const wsRatio = resizeLive && typeof resizeLive.ws === 'number'
 				? resizeLive.ws
 				: (typeof view.wsRatio === 'number' ? view.wsRatio : null);
-			const availH = bodyH >= 80
-				? bodyH - BODY_PAD - (HANDLE_H + BODY_GAP)
-				: 0;
-			let wsH = WS_HEAD_H;
-			let recentH = WS_HEAD_H;
-			if (availH > 0) {
-				const pair = availH - BODY_GAP;
-				if (view.wsCollapsed && view.recentCollapsed) {
-					wsH = WS_HEAD_H;
-					recentH = WS_HEAD_H;
-				} else if (view.recentCollapsed) {
-					const fitH = wsContentH > 0 ? wsContentH + WS_HEAD_H : (pair - WS_HEAD_H);
-					wsH = Math.max(WS_HEAD_H, Math.min(fitH, pair - WS_HEAD_H));
-					recentH = WS_HEAD_H;
-				} else if (view.wsCollapsed) {
-					wsH = WS_HEAD_H;
-					recentH = Math.max(WS_HEAD_H, pair - WS_HEAD_H);
-				} else {
-					const target = wsRatio !== null
-						? pair * wsRatio
-						: Math.min(wsContentH + WS_HEAD_H, pair * 0.62);
-					wsH = Math.max(WS_HEAD_H + 8, Math.min(target, pair - WS_HEAD_H - 8));
-					recentH = Math.max(WS_HEAD_H, pair - wsH);
-				}
+			const wsPx = (!resizeLive || typeof resizeLive.ws !== 'number') && typeof view.wsPx === 'number' && view.wsPx > 0
+				? view.wsPx
+				: null;
+			let wsSectionStyle = null;
+			if (!view.split) {
+				wsSectionStyle = null;
+			} else if (view.wsCollapsed) {
+				wsSectionStyle = { flex: '0 0 ' + WS_HEAD_H + 'px' };
+			} else if (wsPx !== null) {
+				wsSectionStyle = { flex: '0 0 ' + wsPx + 'px', maxHeight: 'none' };
+			} else if (wsRatio !== null) {
+				wsSectionStyle = { flex: '0 0 calc((100% - 10px) * ' + wsRatio + ')', maxHeight: 'none' };
+			} else if (wsContentH > 0) {
+				wsSectionStyle = { flex: '0 0 ' + Math.max(WS_HEAD_H + 8, wsContentH + WS_HEAD_H) + 'px' };
 			}
-			const wsSectionStyle = availH > 0 ? { height: wsH + 'px' } : null;
-			const recentSectionStyle = availH > 0 ? { height: recentH + 'px' } : null;
 
 			const workspaceSection = h('div', { key: 'ws', className: 'sr-section sr-section-ws' + (view.wsCollapsed ? ' is-collapsed' : ''), style: wsSectionStyle }, [
 				h(SectionHeader, {
@@ -2506,7 +2477,7 @@ function StatusDot(props) {
 				}));
 			}
 
-			const recentSection = h('div', { key: 'recent', className: 'sr-section sr-section-recent' + (view.recentCollapsed ? ' is-collapsed' : ''), style: recentSectionStyle }, [
+			const recentSection = h('div', { key: 'recent', className: 'sr-section sr-section-recent' + (view.recentCollapsed ? ' is-collapsed' : '') }, [
 				h(SectionHeader, {
 					key: 'h',
 					label: tr('section.recent'),
@@ -2673,9 +2644,10 @@ function StatusDot(props) {
 					let wsH = startWsH;
 					let lastY = startY;
 					let rafId = 0;
-					if (rootEl) rootEl.classList.add('is-resizing');
-					wsEl.style.transition = 'none';
-					recentEl.style.transition = 'none';
+					if (rootEl) {
+						rootEl.style.setProperty('--sr-drag-ws', startWsH + 'px');
+						rootEl.classList.add('is-resizing');
+					}
 					document.body.style.userSelect = 'none';
 					const paint = function () {
 						rafId = 0;
@@ -2684,8 +2656,9 @@ function StatusDot(props) {
 						if (next > pairH - MIN_H) next = pairH - MIN_H;
 						if (Math.abs(next - wsH) < 0.5) return;
 						wsH = next;
-						wsEl.style.height = next + 'px';
-						recentEl.style.height = (pairH - next) + 'px';
+						if (rootEl) {
+							rootEl.style.setProperty('--sr-drag-ws', next + 'px');
+						}
 					};
 					const onMove = function (moveEvent) {
 						lastY = moveEvent.clientY;
@@ -2700,10 +2673,17 @@ function StatusDot(props) {
 						if (rafId) { window.cancelAnimationFrame(rafId); rafId = 0; }
 						document.body.style.cursor = '';
 						document.body.style.userSelect = '';
-						wsEl.style.transition = '';
-						recentEl.style.transition = '';
-						if (rootEl) rootEl.classList.remove('is-resizing');
-						patchView({ wsRatio: Math.round((wsH / pairH) * 1000) / 1000, recentRatio: null });
+						patchView({ wsRatio: Math.round((wsH / pairH) * 1000) / 1000, wsPx: Math.round(wsH), recentRatio: null });
+						var unlock = function () {
+							if (!rootEl) return;
+							rootEl.classList.remove('is-resizing');
+							rootEl.style.removeProperty('--sr-drag-ws');
+						};
+						if (typeof window.requestAnimationFrame === 'function') {
+							window.setTimeout(unlock, 60);
+						} else {
+							window.setTimeout(unlock, 32);
+						}
 					};
 					document.addEventListener('pointermove', onMove);
 					document.addEventListener('mousemove', onMove);
@@ -2721,7 +2701,7 @@ function StatusDot(props) {
 					title: tr('split.hint'),
 					onPointerDown: startResize(),
 					onDoubleClick: function () {
-						patchView({ wsRatio: null, recentRatio: null });
+						patchView({ wsRatio: null, wsPx: null, recentRatio: null });
 					}
 				}, h('span', { key: 'g', className: 'sr-resize-grip', 'aria-hidden': 'true' }));
 			}
@@ -2745,7 +2725,7 @@ function StatusDot(props) {
 			]) : null;
 			return h('div', {
 				key: 'root',
-				className: 'sr-root' + (animating ? ' is-animating' : '') + (view.recentAlign === 'independent' ? ' is-recent-independent' : ''),
+				className: 'sr-root' + (animating ? ' is-animating' : '') + (view.recentAlign === 'independent' ? ' is-recent-independent' : '') + (view.split ? '' : ' is-global-scroll'),
 				style: {
 					'--sr-fs-section': view.fontSection + 'px',
 					'--sr-fs-group': view.fontGroup + 'px',
@@ -2758,14 +2738,12 @@ function StatusDot(props) {
 				header,
 				h('div', {
 					key: 'body',
-					ref: bodyRef,
 					className: 'sr-body'
-						+ (availH > 0 ? ' is-sized' : '')
 						+ (view.wsCollapsed ? ' is-ws-collapsed' : '')
 						+ (view.recentCollapsed ? ' is-recent-collapsed' : '')
 				}, query.trim() ? renderSearchResults() : [
 					workspaceSection,
-					resizeHandle(),
+					view.split ? resizeHandle() : null,
 					recentSection
 				]),
 				dragGhost,
@@ -2837,10 +2815,9 @@ function StatusDot(props) {
 			'.sr-search-clear{width:20px;height:20px;border-radius:5px}',
 			'.sr-body{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:1px;padding-top:2px}',
 			'.sr-section{display:flex;flex-direction:column;min-height:0;border-radius:10px;overflow:hidden;transition:height .3s cubic-bezier(.4,0,.2,1),flex-grow .3s cubic-bezier(.4,0,.2,1),flex-basis .3s cubic-bezier(.4,0,.2,1),min-height .3s cubic-bezier(.4,0,.2,1);background:rgba(127,127,127,.055);background:color-mix(in srgb,var(--dsw-alias-bg-layer-2,#f4f4f5) 46%,transparent);border:1px solid color-mix(in srgb,var(--dsw-alias-border-l1,rgba(0,0,0,.08)) 66%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%)}',
-			'.sr-section-ws{flex:0 0 auto;min-height:0;overflow:hidden}',
-			'.sr-body:not(.is-sized) .sr-section-ws{flex:0 0 auto;max-height:62%}',
-						'.sr-section-recent{flex:0 0 auto;min-height:34px;overflow:hidden}',
-			'.sr-body:not(.is-sized) .sr-section-recent{flex:1 1 0;min-height:34px}',
+			'.sr-section-ws{flex:0 0 auto;max-height:62%;min-height:0;overflow:hidden}',
+			'.sr-section-recent{flex:1 1 0;min-height:34px;overflow:hidden}',
+			'.sr-section-recent.is-collapsed{flex:0 0 34px;min-height:34px}',
 			
 			'.sr-section-body{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;overflow:hidden}',
 			'.sr-section-inner{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column}',
@@ -2920,6 +2897,17 @@ function StatusDot(props) {
 			'.sr-group-list{display:flex;flex-direction:column;gap:5px}',
 			'.sr-group:has(.sr-group-body.is-open){margin-bottom:3px}',
 			'.sr-root.is-resizing .sr-section{transition:none !important}',
+			'.sr-root.is-resizing .sr-section-ws{flex:0 0 var(--sr-drag-ws,auto) !important;height:auto !important;max-height:none !important}',
+			'.sr-root.is-resizing .sr-section-recent{flex:1 1 0 !important;height:auto !important;min-height:0 !important}',
+			'.sr-root.is-global-scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}',
+			'.sr-root.is-global-scroll .sr-body{display:block;flex:none;overflow:visible;padding-top:0}',
+			'.sr-root.is-global-scroll .sr-section{flex:none !important;max-height:none !important;height:auto !important;margin-bottom:6px}',
+			'.sr-root.is-global-scroll .sr-section.is-collapsed{height:34px !important;min-height:34px !important;overflow:hidden !important;margin-bottom:6px}',
+			'.sr-root:not(.is-global-scroll) .sr-section-recent{margin-top:-2px}',
+			'.sr-root:not(.is-global-scroll) .sr-section-recent .sr-section-label{position:relative;top:-1px}',
+			'.sr-root:not(.is-global-scroll) .sr-resize{z-index:3}',
+			'[class*="scrollArea"]:has(.sr-root){grid-template-rows:8px max-content 2px minmax(0,1fr)}',
+			'.sr-root{max-height:100%}',
 			'.sr-root.is-resizing .sr-resize{opacity:1}',
 			'.sr-ws-row{display:flex;flex:0 0 auto;align-items:center;border-radius:10px;transition:background .16s ease,box-shadow .16s ease}',
 			'.sr-ws-row:hover{background:rgba(0,0,0,.04);background:color-mix(in srgb,var(--dsw-alias-label-primary,#111) 5%,transparent);box-shadow:0 1px 2px rgba(0,0,0,.05)}',
