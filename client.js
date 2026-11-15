@@ -1203,11 +1203,7 @@ function StatusDot(props) {
 					h(Icon, { key: 'f', name: props.collapsed ? 'folderClose' : 'folderOpen', size: 14, className: 'sr-ws-icon' }),
 					h('span', { key: 't', className: 'sr-ws-title' }, group.title),
 				]),
-				props.status ? h('span', {
-				key: 'st',
-				className: 'sr-ws-status',
-				title: props.tr('status.' + props.status)
-			}, DotSvg(8, props.status === 'pending' ? 'var(--dsw-alias-state-warn-primary,#d38b1a)' : props.status === 'error' ? 'var(--dsw-alias-state-error-primary,#d13438)' : '#3964FE')) : null,
+				props.status ? h('span', { key: 'st', className: 'sr-ws-status' }, h(StatusDot, { kind: props.status, tr: props.tr })) : null,
 			h('span', { key: 'more', className: 'sr-row-more sr-ws-more' }, [
 					h(IconButton, {
 						key: 'm',
@@ -2266,7 +2262,7 @@ function StatusDot(props) {
 							openMenuAt('workspace', event, { group: group });
 						},
 						onNewSession: function () {
-							newSession(group.workspaceId);
+							newSession(group.kind === 'workspace' ? group.id : undefined);
 						}
 					}),
 					body
@@ -2917,7 +2913,7 @@ function StatusDot(props) {
 			'.sr-chevron{flex:none;color:var(--dsw-alias-label-tertiary,rgba(0,0,0,.4));transform:rotate(90deg);transition:transform .16s ease}',
 			'.sr-ws-row.is-collapsed .sr-chevron{transform:rotate(0deg)}',
 			'.sr-ws-more{display:none;margin-right:3px;gap:6px}',
-			'.sr-ws-status{display:inline-flex;align-items:center;justify-content:center;width:14px;flex:none;margin-right:11px}',
+			'.sr-ws-status{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex:none;margin-right:9px}',
 			'.sr-row-tail{position:relative;display:inline-flex;align-items:center;justify-content:flex-end;flex:0 0 20px;width:20px;height:20px}',
 			'.sr-row-tail-status{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}',
 			'.sr-row:hover .sr-row-tail-status{display:none}',
